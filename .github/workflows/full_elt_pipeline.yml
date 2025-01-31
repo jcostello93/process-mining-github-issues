@@ -30,7 +30,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install .
 
-      - name: Extract data from GitHub
+      - name: Extract, land, and transform GitHub Issues data
         run: |
           python src/data_pipeline/full_elt_pipeline.py --owner "${{ inputs.owner }}" --repo "${{ inputs.repo }}"
         env:
