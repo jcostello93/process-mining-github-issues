@@ -1,5 +1,13 @@
 # Project
 .python-version
+*assignees.json*
+*comments.json*
+*events.json*
+*issues.json*
+*labels.json*
+*milestones.json*
+*timelines.json*
+*event_log.xes*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
