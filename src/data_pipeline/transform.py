@@ -1,8 +1,9 @@
+import json
 import os
 import time
 import argparse
 from datetime import datetime
-from src.data_pipeline.s3 import get_file, upload_file
+from src.data_pipeline.s3 import fetch_file, upload_file
 from pm4py.objects.log.obj import EventLog, Trace, Event
 import pm4py
 
@@ -44,6 +45,8 @@ def create_xes_log(issues):
         creation_event["org:resource"] = issue["user"]["login"]
         trace.append(creation_event)
 
+        log.append(trace)
+
     print("XES log creation complete.")
     return log
 
@@ -54,7 +57,9 @@ def main(owner, repo, should_publish):
     issues_file = f"{owner}_{repo}_issues.json"
 
     print("Retrieving issues")
-    issues = get_file(issues_file, bucket_name, issues_file)
+    issues = fetch_file(issues_file, bucket_name, issues_file)
+    with open(issues_file, "r", encoding="utf-8") as file:
+        issues = json.load(file)
     if issues is None:
         raise ValueError(
             f"Failed to retrieve issues from {issues_file} in bucket {bucket_name}"

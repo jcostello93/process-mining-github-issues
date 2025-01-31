@@ -1,7 +1,6 @@
-import json
 import boto3
-from botocore.exceptions import NoCredentialsError, PartialCredentialsError
 import os
+from botocore.exceptions import NoCredentialsError, PartialCredentialsError
 
 
 def upload_file(file_path, bucket_name, object_name):
@@ -16,73 +15,44 @@ def upload_file(file_path, bucket_name, object_name):
     s3_client = boto3.client("s3")
 
     try:
-        # Upload the file to S3
         s3_client.upload_file(file_path, bucket_name, object_name)
         print(f"File uploaded successfully to s3://{bucket_name}/{object_name}")
-
     except FileNotFoundError:
-        print(f"The file {file_path} was not found.")
+        print(f"Error: File {file_path} not found.")
     except NoCredentialsError:
-        print("Credentials not available.")
+        print("Error: AWS credentials not available.")
     except PartialCredentialsError:
-        print("Incomplete credentials provided.")
+        print("Error: Incomplete AWS credentials provided.")
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"Unexpected error occurred: {e}")
 
 
-def get_json_from_file(file_path):
+def fetch_file(file_path, bucket_name, object_name):
     """
-    Load a JSON file and return its content as a dictionary.
+    Fetch a file: if it exists locally, return its path. Otherwise, download it from S3.
 
-    :param file_path: The local file path to the JSON file.
-    :return: A dictionary with the JSON content.
-    """
-    try:
-        with open(file_path, "r", encoding="utf-8") as file:
-            return json.load(file)
-    except FileNotFoundError:
-        print(f"The file {file_path} was not found.")
-        return None
-    except json.JSONDecodeError as e:
-        print(f"Failed to decode JSON file {file_path}: {e}")
-        return None
-    except Exception as e:
-        print(f"An error occurred while reading {file_path}: {e}")
-        return None
-
-
-def get_file(file_path, bucket_name, object_name):
-    """
-    Check if a file exists locally, and if not, download it from a specified S3 bucket,
-    save it locally, and return its content as a dictionary.
-
-    :param file_path: The local file path to save the downloaded file.
+    :param file_path: The local file path to check or save the downloaded file.
     :param bucket_name: The name of the S3 bucket.
     :param object_name: The name of the object in the S3 bucket.
-    :return: A dictionary with the JSON content of the file.
+    :return: The file path (consumer handles parsing).
     """
     if os.path.exists(file_path):
         print(f"File already exists locally: {file_path}")
-        return get_json_from_file(file_path)
+        return file_path  # Consumer handles parsing
 
     s3_client = boto3.client("s3")
-
     try:
         s3_client.download_file(bucket_name, object_name, file_path)
-        print(
-            f"File downloaded successfully from s3://{bucket_name}/{object_name} to {file_path}"
-        )
-        return get_json_from_file(file_path)
+        print(f"File downloaded from s3://{bucket_name}/{object_name} → {file_path}")
+        return file_path  # Consumer handles parsing
 
     except FileNotFoundError:
-        print(f"The file path {file_path} is invalid.")
-        return None
+        print(f"Error: Invalid file path {file_path}.")
     except NoCredentialsError:
-        print("Credentials not available.")
-        return None
+        print("Error: AWS credentials not available.")
     except PartialCredentialsError:
-        print("Incomplete credentials provided.")
-        return None
+        print("Error: Incomplete AWS credentials provided.")
     except Exception as e:
-        print(f"An error occurred: {e}")
-        return None
+        print(f"Unexpected error occurred: {e}")
+
+    return None  # Indicate failure
