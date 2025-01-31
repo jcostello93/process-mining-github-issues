@@ -1,0 +1,58 @@
+name: Extract and land raw GitHub Issues data in S3
+
+on:
+  workflow_dispatch:
+    inputs:
+      owner:
+        description: 'Owner of repo'
+        required: true
+        default: 'facebook'
+      repo:
+        description: 'Name of repo'
+        required: true
+        default: 'react'
+      domain:
+        description: 'Domain of data'
+        required: true
+        default: 'issues'
+        type: choice
+        options:
+          - issues
+          - timelines
+          - roles
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+
+      - name: Extract data from GitHub
+        run: |
+          python src/data_pipeline/extract.py --owner "${{ inputs.owner }}" --repo "${{ inputs.repo }}" --domain "${{ inputs.domain }}"
+        env:
+          AWS_DEFAULT_REGION: eu-west-1
+          AWS_ACCESS_KEY_ID: ${{ github.ref == 'refs/heads/main' && secrets.AWS_ACCESS_KEY_ID_STAGING || secrets.AWS_ACCESS_KEY_ID_PROD }}
+          AWS_SECRET_ACCESS_KEY: ${{ github.ref == 'refs/heads/main' && secrets.AWS_SECRET_ACCESS_KEY_STAGING || secrets.AWS_SECRET_ACCESS_KEY_STAGING }}
+          GH_PAT: ${{ secrets.GH_PAT }}
+
+      - name: Land raw data in S3
+        run: |
+          python src/data_pipeline/land.py --owner "${{ inputs.owner }}" --repo "${{ inputs.repo }}" --domain "${{ inputs.domain }}"
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          AWS_DEFAULT_REGION: eu-west-1
+          AWS_ACCESS_KEY_ID: ${{ github.ref == 'refs/heads/main' && secrets.AWS_ACCESS_KEY_ID_STAGING || secrets.AWS_ACCESS_KEY_ID_PROD }}
+          AWS_SECRET_ACCESS_KEY: ${{ github.ref == 'refs/heads/main' && secrets.AWS_SECRET_ACCESS_KEY_STAGING || secrets.AWS_SECRET_ACCESS_KEY_STAGING }}
