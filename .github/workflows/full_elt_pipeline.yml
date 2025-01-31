@@ -1,0 +1,41 @@
+name: Full ELT pipeline for GitHub Issues
+
+on:
+  workflow_dispatch:
+    inputs:
+      owner:
+        description: 'Owner of repo'
+        required: true
+        default: 'facebook'
+      repo:
+        description: 'Name of repo'
+        required: true
+        default: 'react'
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+
+      - name: Extract data from GitHub
+        run: |
+          python src/data_pipeline/full_elt_pipeline.py --owner "${{ inputs.owner }}" --repo "${{ inputs.repo }}"
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          AWS_DEFAULT_REGION: eu-west-1
+          AWS_ACCESS_KEY_ID: ${{ github.ref == 'refs/heads/main' && secrets.AWS_ACCESS_KEY_ID_PROD || secrets.AWS_ACCESS_KEY_ID_STAGING }}
+          AWS_SECRET_ACCESS_KEY: ${{ github.ref == 'refs/heads/main' && secrets.AWS_SECRET_ACCESS_KEY_PROD || secrets.AWS_SECRET_ACCESS_KEY_STAGING }}
+          S3_BUCKET: ${{ github.ref == 'refs/heads/main' && 'process-mining-github-issues-prod' || 'process-mining-github-issues-staging' }}
