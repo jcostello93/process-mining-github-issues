@@ -1,0 +1,5 @@
+boto3==1.36.2
+requests==2.32.3
+pm4py==2.7.13.1
+ruff==0.9.4
+pre-commit==4.1.0
