@@ -11,6 +11,7 @@ def extract_and_land_domain(owner, repo, domain):
 def main(owner, repo, should_publish):
     print("Running full ELT pipeline")
     extract_and_land_domain(owner, repo, "issues")
+    extract_and_land_domain(owner, repo, "timelines")
 
     print("Transform")
     transform.main(owner, repo, should_publish)

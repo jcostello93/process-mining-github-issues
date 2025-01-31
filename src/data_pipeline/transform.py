@@ -21,10 +21,11 @@ def parse_timestamp(timestamp_str):
         return None
 
 
-def create_xes_log(issues):
+def create_xes_log(issues, timelines):
     """
-    Create an XES log from issues using PM4Py.
+    Create an XES log from issues and timelines using PM4Py.
     :param issues: List of issues.
+    :param timelines: Dictionary of issue timelines.
     :return: PM4Py EventLog object.
     """
     log = EventLog()
@@ -45,7 +46,52 @@ def create_xes_log(issues):
         creation_event["org:resource"] = issue["user"]["login"]
         trace.append(creation_event)
 
-        log.append(trace)
+        # Process timeline events
+        if str(issue["number"]) in timelines:
+            for timeline_event in timelines[str(issue["number"])]:
+                event = Event()
+                event_name = timeline_event["event"]
+                event["time:timestamp"] = parse_timestamp(timeline_event["created_at"])
+                event["org:resource"] = (
+                    timeline_event["actor"]["login"]
+                    if timeline_event.get("actor")
+                    else "Ghost"
+                )
+
+                author_map = {
+                    "COLLABORATOR": "collaborator",
+                    "CONTRIBUTOR": "contributor",
+                    "FIRST_TIMER": "first_timer",
+                    "FIRST_TIME_CONTRIBUTOR": "first_time_contributor",
+                    "MANNEQUIN": "mannequin",
+                    "MEMBER": "member",
+                    "NONE": "community",
+                    "OWNER": "owner",
+                }
+
+                if event_name == "labeled":
+                    trace.attributes["Label"] = timeline_event["label"]["name"]
+                    event["concept:name"] = event_name
+                elif event_name == "closed":
+                    if timeline_event.get("state_reason"):
+                        event["concept:name"] = timeline_event.get("state_reason")
+                    elif issue.get("state_reason"):
+                        event["concept:name"] = issue.get("state_reason")
+                    else:
+                        # If there's no state_reason, the issue was reopened
+                        event["concept:name"] = "temporarily_closed"
+                else:
+                    event["concept:name"] = event_name
+                    if event.get("author_association"):
+                        event["author_association"] = author_map[
+                            event["author_association"]
+                        ]
+
+                trace.append(event)
+
+        # Append the trace to the log
+        sorted_trace = pm4py.objects.log.util.sorting.sort_timestamp_trace(trace)
+        log.append(sorted_trace)
 
     print("XES log creation complete.")
     return log
@@ -55,6 +101,7 @@ def main(owner, repo, should_publish):
     """Main function to create and optionally publish the XES log."""
     bucket_name = S3_BUCKET
     issues_file = f"{owner}_{repo}_issues.json"
+    timelines_file = f"{owner}_{repo}_timelines.json"
 
     print("Retrieving issues")
     issues = fetch_file(issues_file, bucket_name, issues_file)
@@ -65,9 +112,18 @@ def main(owner, repo, should_publish):
             f"Failed to retrieve issues from {issues_file} in bucket {bucket_name}"
         )
 
+    print("Retrieving timelines")
+    timelines = fetch_file(timelines_file, bucket_name, issues_file)
+    with open(timelines_file, "r", encoding="utf-8") as file:
+        timelines = json.load(file)
+    if timelines is None:
+        raise ValueError(
+            f"Failed to retrieve timelines from {timelines_file} in bucket {bucket_name}"
+        )
+
     # Create and save XES log
     start_time = time.time()
-    log = create_xes_log(issues)
+    log = create_xes_log(issues, timelines)
     output_file = f"{owner}_{repo}_event_log.xes"
     pm4py.write_xes(log, output_file)
     print(
