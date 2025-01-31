@@ -44,8 +44,8 @@ jobs:
           python src/data_pipeline/extract.py --owner "${{ inputs.owner }}" --repo "${{ inputs.repo }}" --domain "${{ inputs.domain }}"
         env:
           AWS_DEFAULT_REGION: eu-west-1
-          AWS_ACCESS_KEY_ID: ${{ github.ref == 'refs/heads/main' && secrets.AWS_ACCESS_KEY_ID_STAGING || secrets.AWS_ACCESS_KEY_ID_PROD }}
-          AWS_SECRET_ACCESS_KEY: ${{ github.ref == 'refs/heads/main' && secrets.AWS_SECRET_ACCESS_KEY_STAGING || secrets.AWS_SECRET_ACCESS_KEY_STAGING }}
+          AWS_ACCESS_KEY_ID: ${{ github.ref == 'refs/heads/main' && secrets.AWS_ACCESS_KEY_ID_PROD || secrets.AWS_ACCESS_KEY_ID_STAGING }}
+          AWS_SECRET_ACCESS_KEY: ${{ github.ref == 'refs/heads/main' && secrets.AWS_SECRET_ACCESS_KEY_PROD || secrets.AWS_SECRET_ACCESS_KEY_STAGING }}
           GH_PAT: ${{ secrets.GH_PAT }}
 
       - name: Land raw data in S3
@@ -54,5 +54,6 @@ jobs:
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
           AWS_DEFAULT_REGION: eu-west-1
-          AWS_ACCESS_KEY_ID: ${{ github.ref == 'refs/heads/main' && secrets.AWS_ACCESS_KEY_ID_STAGING || secrets.AWS_ACCESS_KEY_ID_PROD }}
-          AWS_SECRET_ACCESS_KEY: ${{ github.ref == 'refs/heads/main' && secrets.AWS_SECRET_ACCESS_KEY_STAGING || secrets.AWS_SECRET_ACCESS_KEY_STAGING }}
+          AWS_ACCESS_KEY_ID: ${{ github.ref == 'refs/heads/main' && secrets.AWS_ACCESS_KEY_ID_PROD || secrets.AWS_ACCESS_KEY_ID_STAGING }}
+          AWS_SECRET_ACCESS_KEY: ${{ github.ref == 'refs/heads/main' && secrets.AWS_SECRET_ACCESS_KEY_PROD || secrets.AWS_SECRET_ACCESS_KEY_STAGING }}
+          S3_BUCKET: ${{ github.ref == 'refs/heads/main' && 'process-mining-github-issues-prod' || 'process-mining-github-issues-staging' }}
