@@ -60,3 +60,10 @@ def fetch_all_issues(owner, repo):
     params = {"state": "all", "per_page": MAX_PAGES}
     issues_and_pull_requests = fetch_all_pages(url, params)
     return [item for item in issues_and_pull_requests if "pull_request" not in item]
+
+
+# Fetch the timeline for a specific issue
+def fetch_timeline(issue_number, owner, repo):
+    url = f"{BASE_URL}/{owner}/{repo}/issues/{issue_number}/timeline"
+    custom_headers = {"Accept": "application/vnd.github.mockingbird-preview+json"}
+    return fetch_all_pages(url, custom_headers=custom_headers)
