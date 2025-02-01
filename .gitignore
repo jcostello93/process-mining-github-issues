@@ -8,6 +8,7 @@
 *milestones.json*
 *timelines.json*
 *event_log.xes*
+*.png
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
