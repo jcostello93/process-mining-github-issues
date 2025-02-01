@@ -32,7 +32,7 @@ jobs:
 
       - name: Extract, land, and transform GitHub Issues data
         run: |
-          python src/data_pipeline/full_elt_pipeline.py --owner "${{ inputs.owner }}" --repo "${{ inputs.repo }}"
+          python src/data_pipeline/full_elt_pipeline.py --owner "${{ inputs.owner }}" --repo "${{ inputs.repo }}" --publish
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
           AWS_DEFAULT_REGION: eu-west-1
