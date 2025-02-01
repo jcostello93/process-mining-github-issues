@@ -12,5 +12,6 @@ setup(
         "pre-commit==4.1.0",
         "jupyter==1.1.1",
         "nbstripout==0.2.3",
+        "pyvis==0.3.2",
     ],
 )
