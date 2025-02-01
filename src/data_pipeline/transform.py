@@ -43,7 +43,7 @@ def create_xes_log(issues, timelines):
         creation_event = Event()
         creation_event["concept:name"] = "created"
         creation_event["time:timestamp"] = parse_timestamp(issue["created_at"])
-        creation_event["org:resource"] = issue["user"]["login"]
+        creation_event["org:resource"] = f"User {issue['user']['id']}"
         trace.append(creation_event)
 
         # Process timeline events
@@ -53,7 +53,7 @@ def create_xes_log(issues, timelines):
                 event_name = timeline_event["event"]
                 event["time:timestamp"] = parse_timestamp(timeline_event["created_at"])
                 event["org:resource"] = (
-                    timeline_event["actor"]["login"]
+                    f"User {timeline_event['actor']['id']}"
                     if timeline_event.get("actor")
                     else "Ghost"
                 )
