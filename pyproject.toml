@@ -1,2 +1,3 @@
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "*.ipynb" = ["F821"]
+"notebooks/shared.ipynb" = ["F401"]
