@@ -9,6 +9,7 @@
 *timelines.json*
 *event_log.xes*
 *.png
+*.html
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
