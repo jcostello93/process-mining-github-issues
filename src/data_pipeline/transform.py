@@ -21,6 +21,64 @@ def parse_timestamp(timestamp_str):
         return None
 
 
+def set_event_timestamp(event, data):
+    event["time:timestamp"] = parse_timestamp(data["created_at"])
+
+
+def set_event_resource_from_issue(event, issue):
+    event["org:resource"] = f"User {issue['user']['id']}"
+
+
+def set_event_resource_from_timeline(event, timeline_event):
+    event["org:resource"] = (
+        f"User {timeline_event['actor']['id']}"
+        if timeline_event.get("actor")
+        else "Ghost"
+    )
+
+
+def set_author_association(event, timeline_event):
+    author_map = {
+        "COLLABORATOR": "collaborator",
+        "CONTRIBUTOR": "contributor",
+        "FIRST_TIMER": "first_timer",
+        "FIRST_TIME_CONTRIBUTOR": "first_time_contributor",
+        "MANNEQUIN": "mannequin",
+        "MEMBER": "member",
+        "NONE": "community",
+        "OWNER": "owner",
+    }
+
+    if timeline_event.get("author_association"):
+        event["author_association"] = author_map[timeline_event["author_association"]]
+
+    if timeline_event.get("actor") and "[bot]" in timeline_event["actor"]["login"]:
+        event["author_association"] = "bot"
+
+
+def set_trace_label(trace, timeline_event):
+    event_name = timeline_event["event"]
+    if event_name == "labeled":
+        trace.attributes["Label"] = timeline_event["label"]["name"]
+
+
+def set_event_name(event, issue, timeline_event):
+    event_name = timeline_event["event"]
+    if event_name == "labeled":
+        event["concept:name"] = event_name
+    elif event_name == "closed":
+        # Split "closed" into "completed", "not_planned", and "temporarily_closed"
+        if timeline_event.get("state_reason"):
+            event["concept:name"] = timeline_event.get("state_reason")
+        elif issue.get("state_reason"):
+            event["concept:name"] = issue.get("state_reason")
+        else:
+            # If there's no state_reason, the issue was reopened
+            event["concept:name"] = "temporarily_closed"
+    else:
+        event["concept:name"] = event_name
+
+
 def create_xes_log(issues, timelines):
     """
     Create an XES log from issues and timelines using PM4Py.
@@ -42,54 +100,23 @@ def create_xes_log(issues, timelines):
         # Add creation event
         creation_event = Event()
         creation_event["concept:name"] = "created"
-        creation_event["time:timestamp"] = parse_timestamp(issue["created_at"])
-        creation_event["org:resource"] = f"User {issue['user']['id']}"
+        set_event_timestamp(creation_event, issue)
+        set_event_resource_from_issue(creation_event, issue)
         trace.append(creation_event)
 
         # Process timeline events
         if str(issue["number"]) in timelines:
             for timeline_event in timelines[str(issue["number"])]:
                 event = Event()
-                event_name = timeline_event["event"]
-                event["time:timestamp"] = parse_timestamp(timeline_event["created_at"])
-                event["org:resource"] = (
-                    f"User {timeline_event['actor']['id']}"
-                    if timeline_event.get("actor")
-                    else "Ghost"
-                )
-
-                author_map = {
-                    "COLLABORATOR": "collaborator",
-                    "CONTRIBUTOR": "contributor",
-                    "FIRST_TIMER": "first_timer",
-                    "FIRST_TIME_CONTRIBUTOR": "first_time_contributor",
-                    "MANNEQUIN": "mannequin",
-                    "MEMBER": "member",
-                    "NONE": "community",
-                    "OWNER": "owner",
-                }
-
-                if event_name == "labeled":
-                    trace.attributes["Label"] = timeline_event["label"]["name"]
-                    event["concept:name"] = event_name
-                elif event_name == "closed":
-                    if timeline_event.get("state_reason"):
-                        event["concept:name"] = timeline_event.get("state_reason")
-                    elif issue.get("state_reason"):
-                        event["concept:name"] = issue.get("state_reason")
-                    else:
-                        # If there's no state_reason, the issue was reopened
-                        event["concept:name"] = "temporarily_closed"
-                else:
-                    event["concept:name"] = event_name
-                    if event.get("author_association"):
-                        event["author_association"] = author_map[
-                            event["author_association"]
-                        ]
+                set_event_timestamp(event, timeline_event)
+                set_event_resource_from_timeline(event, timeline_event)
+                set_author_association(event, timeline_event)
+                set_event_name(event, issue, timeline_event)
+                set_trace_label(trace, timeline_event)
 
                 trace.append(event)
 
-        # Append the trace to the log
+        # Append trace with its events sorted
         sorted_trace = pm4py.objects.log.util.sorting.sort_timestamp_trace(trace)
         log.append(sorted_trace)
 
