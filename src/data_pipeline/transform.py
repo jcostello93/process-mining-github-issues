@@ -56,27 +56,44 @@ def set_author_association(event, timeline_event):
         event["author_association"] = "bot"
 
 
-def set_trace_label(trace, timeline_event):
+def set_event_label(event, timeline_event):
     event_name = timeline_event["event"]
     if event_name == "labeled":
-        trace.attributes["Label"] = timeline_event["label"]["name"]
+        event["label"] = timeline_event["label"]["name"]
 
 
-def set_event_name(event, issue, timeline_event):
-    event_name = timeline_event["event"]
-    if event_name == "labeled":
-        event["concept:name"] = event_name
-    elif event_name == "closed":
-        # Split "closed" into "completed", "not_planned", and "temporarily_closed"
-        if timeline_event.get("state_reason"):
-            event["concept:name"] = timeline_event.get("state_reason")
-        elif issue.get("state_reason"):
-            event["concept:name"] = issue.get("state_reason")
-        else:
-            # If there's no state_reason, the issue was reopened
-            event["concept:name"] = "temporarily_closed"
+def handle_closed_event(event, timeline_event):
+    # Use the state name if there is one, else default to Closed
+    if timeline_event.get("state_reason"):
+        event["concept:name"] = timeline_event.get("state_reason")
     else:
-        event["concept:name"] = event_name
+        event["concept:name"] = timeline_event["event"]
+
+    event["has_commit_url"] = bool(timeline_event.get("commit_url"))
+
+
+def set_closed_at(trace, issue):
+    if issue.get("closed_at"):
+        trace.attributes["closed_at"] = parse_timestamp(issue.get("closed_at"))
+
+
+def set_created_at(trace, issue):
+    if issue.get("created_at"):
+        trace.attributes["created_at"] = parse_timestamp(issue.get("created_at"))
+
+
+def handle_cross_referenced(event, timeline_event):
+    event_name = timeline_event["event"]
+    if event_name == "cross-referenced":
+        if timeline_event["source"]["issue"].get("pull_request"):
+            event["concept:name"] = "cross-referenced from PR"
+            if timeline_event["source"]["issue"]["pull_request"].get("merged_at"):
+                event["pr_merged_at"] = parse_timestamp(
+                    timeline_event["source"]["issue"]["pull_request"]["merged_at"]
+                )
+                event["has_merged_pr"] = True
+        else:
+            event["concept:name"] = "cross-referenced from issue"
 
 
 def create_xes_log(issues, timelines):
@@ -95,7 +112,9 @@ def create_xes_log(issues, timelines):
     for issue in issues:
         trace = Trace()
         trace.attributes["concept:name"] = f"Issue {issue['number']}"
-        trace.attributes["reactions"] = issue["reactions"]["total_count"]
+        trace.attributes["state_reason"] = issue["state_reason"]
+        set_created_at(trace, issue)
+        set_closed_at(trace, issue)
 
         # Add creation event
         creation_event = Event()
@@ -105,14 +124,29 @@ def create_xes_log(issues, timelines):
         trace.append(creation_event)
 
         # Process timeline events
-        if str(issue["number"]) in timelines:
-            for timeline_event in timelines[str(issue["number"])]:
+        issue_number_str = str(issue["number"])
+        if issue_number_str in timelines:
+            for timeline_event in timelines[issue_number_str]:
                 event = Event()
+
+                # Set default fields for all timeline events
+                event_name = timeline_event["event"]
+                event["concept:name"] = event_name
                 set_event_timestamp(event, timeline_event)
                 set_event_resource_from_timeline(event, timeline_event)
-                set_author_association(event, timeline_event)
-                set_event_name(event, issue, timeline_event)
-                set_trace_label(trace, timeline_event)
+
+                # Handle special cases and overrides
+                match event_name:
+                    case "closed":
+                        handle_closed_event(event, timeline_event)
+                    case "cross-referenced":
+                        handle_cross_referenced(event, timeline_event)
+                    case "commented":
+                        set_author_association(event, timeline_event)
+                    case "labeled":
+                        set_event_label(event, timeline_event)
+                    case "referenced":
+                        event["concept:name"] = "referenced from commit"
 
                 trace.append(event)
 
