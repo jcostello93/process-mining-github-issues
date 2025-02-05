@@ -4,9 +4,13 @@ import os
 from src.data_pipeline.s3 import fetch_file
 from src.app import discovery, stats, table
 from datetime import timedelta
+import math
 
 S3_BUCKET = None
 IS_STREAMLIT_CLOUD = "STREAMLIT_SERVER_PORT" in os.environ
+
+st.set_page_config(layout="wide")
+
 
 try:
     print("Setting env vars")
@@ -123,6 +127,14 @@ top_k = st.sidebar.number_input(
     step=1,
 )
 
+sample_pct = st.sidebar.number_input(
+    "Sample %",
+    min_value=1,
+    max_value=100,
+    value=100,
+    step=1,
+)
+
 
 # Checkboxes for author association filtering
 author_values = author_associations_set
@@ -131,7 +143,7 @@ selected_authors = st.sidebar.multiselect(
 )
 
 # Checkbox for merged PR filter
-merged_pr = st.sidebar.checkbox("Filter Merged PRs", value=True)
+merged_pr = st.sidebar.checkbox("Only keep cases linked to merged PRs", value=False)
 
 labels = labels_set
 with st.sidebar.expander("Filter Labels", expanded=False):
@@ -148,6 +160,10 @@ def safe_filter(func, log, description, *args, **kwargs):
 
 # Apply Filters
 def apply_filters(log):
+    if sample_pct < 100:
+        num_cases = math.floor(log["case:concept:name"].nunique() * (sample_pct / 100))
+        log = pm4py.sample_cases(log, num_cases=num_cases)
+
     if len(selected_events) > 0:
         try:
             log = pm4py.filter_event_attribute_values(
