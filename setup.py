@@ -13,5 +13,7 @@ setup(
         "jupyter==1.1.1",
         "nbstripout==0.2.3",
         "pyvis==0.3.2",
+        "streamlit==1.42.0",
+        "graphviz==0.20.3",
     ],
 )
