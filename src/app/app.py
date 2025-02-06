@@ -2,7 +2,7 @@ import streamlit as st
 import pm4py
 import os
 from src.data_pipeline.s3 import fetch_file
-from src.app import conformance, discovery, stats, table, variants
+from src.app import bottleneck_analysis, conformance, discovery, stats, table, variants
 from datetime import timedelta
 import math
 
@@ -236,7 +236,7 @@ elif page == "Discovery":
     discovery.show(filtered_log)
 elif page == "Table":
     table.show(filtered_log)
-# elif page == "Bottleneck":
-#     bottleneck.show(filtered_log)
+elif page == "Bottleneck":
+    bottleneck_analysis.show(filtered_log)
 elif page == "Conformance":
     conformance.show(log, filtered_log)

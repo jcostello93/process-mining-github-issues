@@ -8,7 +8,7 @@ def show(filtered_log):
 
     # Generate a Petri Net
     noise_threshold_petri = st.slider(
-        "Noise Threshold Petri", min_value=0.0, max_value=1.0, value=0.5, step=0.05
+        "Noise Threshold Petri", min_value=0.0, max_value=1.0, value=0.0, step=0.05
     )
     net, im, fm = pm4py.discover_petri_net_inductive(
         filtered_log, noise_threshold=noise_threshold_petri
