@@ -84,6 +84,7 @@ def apply(
     selected_authors = st.sidebar.multiselect(
         "Filter Author Association", author_values, default=author_values
     )
+    keep_bot_events = st.sidebar.checkbox("Keep bot events", value=True)
 
     # Checkbox for merged PR filter
     merged_pr = st.sidebar.checkbox("Only keep cases linked to merged PRs", value=False)
@@ -137,6 +138,18 @@ def apply(
             )
         except Exception:
             print("Could not filter author_association")
+
+    if not keep_bot_events:
+        try:
+            log = pm4py.filter_event_attribute_values(
+                log,
+                "is_bot_author",
+                {True},
+                retain=False,
+                level="event",
+            )
+        except Exception:
+            print("Could not filter bot events")
 
     if merged_pr:
         try:
