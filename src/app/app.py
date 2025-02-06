@@ -2,11 +2,15 @@ import streamlit as st
 import pm4py
 import os
 from src.data_pipeline.s3 import fetch_file
-from src.app import discovery, stats, table
+from src.app import bottleneck_analysis, conformance, discovery, stats, table, variants
 from datetime import timedelta
+import math
 
 S3_BUCKET = None
 IS_STREAMLIT_CLOUD = "STREAMLIT_SERVER_PORT" in os.environ
+
+st.set_page_config(layout="wide")
+
 
 try:
     print("Setting env vars")
@@ -23,7 +27,9 @@ except Exception:
 # Sidebar Navigation
 st.sidebar.title("Navigation")
 repo = st.sidebar.selectbox("Repo:", {"node-red-contrib-node-reddit", "react"})
-page = st.sidebar.radio("Go to:", ["Stats", "Discovery", "Table"])
+page = st.sidebar.radio(
+    "Go to:", ["Stats", "Variants", "Discovery", "Bottleneck", "Conformance", "Table"]
+)
 
 if "log" not in st.session_state:
     st.session_state["log"] = None
@@ -114,12 +120,20 @@ selected_endpoints = st.sidebar.multiselect(
 )
 
 
-variants = pm4py.statistics.variants.pandas.get.get_variants_count(log)
+variants_count = pm4py.statistics.variants.pandas.get.get_variants_count(log)
 top_k = st.sidebar.number_input(
-    "Top Variants (k)",
+    f"Top Variants (1 - {len(variants_count)})",
     min_value=1,
-    max_value=len(variants),
-    value=len(variants),
+    max_value=len(variants_count),
+    value=len(variants_count),
+    step=1,
+)
+
+sample_pct = st.sidebar.number_input(
+    "Sample %",
+    min_value=1,
+    max_value=100,
+    value=100,
     step=1,
 )
 
@@ -131,7 +145,7 @@ selected_authors = st.sidebar.multiselect(
 )
 
 # Checkbox for merged PR filter
-merged_pr = st.sidebar.checkbox("Filter Merged PRs", value=True)
+merged_pr = st.sidebar.checkbox("Only keep cases linked to merged PRs", value=False)
 
 labels = labels_set
 with st.sidebar.expander("Filter Labels", expanded=False):
@@ -148,6 +162,10 @@ def safe_filter(func, log, description, *args, **kwargs):
 
 # Apply Filters
 def apply_filters(log):
+    if sample_pct < 100:
+        num_cases = math.floor(log["case:concept:name"].nunique() * (sample_pct / 100))
+        log = pm4py.sample_cases(log, num_cases=num_cases)
+
     if len(selected_events) > 0:
         try:
             log = pm4py.filter_event_attribute_values(
@@ -212,7 +230,13 @@ filtered_log = apply_filters(log)
 
 if page == "Stats":
     stats.show(filtered_log)
+elif page == "Variants":
+    variants.show(filtered_log)
 elif page == "Discovery":
     discovery.show(filtered_log)
 elif page == "Table":
     table.show(filtered_log)
+elif page == "Bottleneck":
+    bottleneck_analysis.show(filtered_log)
+elif page == "Conformance":
+    conformance.show(log, filtered_log)
