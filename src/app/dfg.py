@@ -84,11 +84,11 @@ def show(filtered_log):
         start_activities,
         end_activities,
         aggregation_measure="median",
-        # rankdir="LR",
+        rankdir="LR",
         file_path="performance_dfg_median.svg",
         format="svg",
     )
 
-    st.image("frequency_dfg.png", use_container_width=False)
-    st.image("performance_dfg_sum.png", use_container_width=False)
-    st.image("performance_dfg_median.png", use_container_width=False)
+    st.image("frequency_dfg.svg", use_container_width=False)
+    st.image("performance_dfg_sum.svg", use_container_width=False)
+    st.image("performance_dfg_median.svg", use_container_width=False)

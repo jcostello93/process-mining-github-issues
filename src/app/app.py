@@ -2,7 +2,7 @@ import streamlit as st
 import pm4py
 import os
 from src.data_pipeline.s3 import fetch_file
-from src.app import discovery, stats, table
+from src.app import conformance, discovery, stats, table, variants
 from datetime import timedelta
 import math
 
@@ -27,7 +27,9 @@ except Exception:
 # Sidebar Navigation
 st.sidebar.title("Navigation")
 repo = st.sidebar.selectbox("Repo:", {"node-red-contrib-node-reddit", "react"})
-page = st.sidebar.radio("Go to:", ["Stats", "Discovery", "Table"])
+page = st.sidebar.radio(
+    "Go to:", ["Stats", "Variants", "Discovery", "Bottleneck", "Conformance", "Table"]
+)
 
 if "log" not in st.session_state:
     st.session_state["log"] = None
@@ -118,12 +120,12 @@ selected_endpoints = st.sidebar.multiselect(
 )
 
 
-variants = pm4py.statistics.variants.pandas.get.get_variants_count(log)
+variants_count = pm4py.statistics.variants.pandas.get.get_variants_count(log)
 top_k = st.sidebar.number_input(
-    "Top Variants (k)",
+    f"Top Variants (1 - {len(variants_count)})",
     min_value=1,
-    max_value=len(variants),
-    value=len(variants),
+    max_value=len(variants_count),
+    value=len(variants_count),
     step=1,
 )
 
@@ -228,7 +230,13 @@ filtered_log = apply_filters(log)
 
 if page == "Stats":
     stats.show(filtered_log)
+elif page == "Variants":
+    variants.show(filtered_log)
 elif page == "Discovery":
     discovery.show(filtered_log)
 elif page == "Table":
     table.show(filtered_log)
+# elif page == "Bottleneck":
+#     bottleneck.show(filtered_log)
+elif page == "Conformance":
+    conformance.show(log, filtered_log)
