@@ -14,7 +14,7 @@ def show(full_log, filtered_log):
         value=50,
         step=1,
     )
-    if st.button("🔍 Run performance diagnostics"):
+    if st.button("🐢 Run performance diagnostics"):
         num_cases = math.floor(
             full_log["case:concept:name"].nunique() * (sample_pct / 100)
         )
@@ -27,6 +27,12 @@ def show(full_log, filtered_log):
         net, initial_marking, final_marking = pm4py.discover_petri_net_inductive(
             filtered_log
         )
+
+        petri_filename = "petri_net_conformance.svg"
+        pm4py.save_vis_petri_net(
+            net, initial_marking, final_marking, file_path=petri_filename, format="svg"
+        )
+        st.image(petri_filename, use_container_width=True)
 
         parameters_tbr = {
             token_based_replay_algorithm.Variants.TOKEN_REPLAY.value.Parameters.DISABLE_VARIANTS: True,
@@ -52,6 +58,8 @@ def show(full_log, filtered_log):
             trans_data.append(
                 {
                     "Transition": str(trans),
+                    "N fit": trans_diagnostics[trans]["n_fit"],
+                    "N underfed": trans_diagnostics[trans]["n_underfed"],
                     "Fit Median Time (hrs)": trans_diagnostics[trans]["fit_median_time"]
                     / 3600,
                     "Underfed Median Time (hrs)": trans_diagnostics[trans][
@@ -79,7 +87,8 @@ def show(full_log, filtered_log):
             act_data.append(
                 {
                     "Activity": act,
-                    "Number Containing": act_diagnostics[act]["n_containing"],
+                    "N fit": act_diagnostics[act]["n_fit"],
+                    "N Containing": act_diagnostics[act]["n_containing"],
                     "Fit Median Time (hrs)": act_diagnostics[act]["fit_median_time"]
                     / 3600,
                     "Containing Median Time (hrs)": act_diagnostics[act][

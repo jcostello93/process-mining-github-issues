@@ -1,6 +1,6 @@
 import streamlit as st
 import pm4py
-from src.app import case_duration_over_time, dfg
+from src.app import case_duration_over_time, dotted_line_chart, dfg
 
 
 def show(filtered_log):
@@ -20,5 +20,7 @@ def show(filtered_log):
         file_path=performance_spectrum_file_path,
     )
     st.image(performance_spectrum_file_path, use_container_width=False)
+    dotted_line_chart.show(filtered_log)
+
     case_duration_over_time.show(filtered_log)
     dfg.show(filtered_log)

@@ -48,18 +48,18 @@ def show(filtered_log):
         if edge in performance_dfg:
             del performance_dfg[edge]
 
-    if st.button("🔍 Open Timeline DFG in New Window"):
-        dfg_time = clean_dfg_time.apply(filtered_log)
-        gviz = timeline_gviz_generator.apply(
-            frequency_dfg,
-            dfg_time,
-            parameters={
-                "max_no_of_edges_in_diagram": max_num_edges,
-                "start_activities": start_activities,
-                "end_activities": end_activities,
-            },
-        )
-        dfg_visualizer.view(gviz)
+    dfg_time = clean_dfg_time.apply(filtered_log)
+    gviz = timeline_gviz_generator.apply(
+        frequency_dfg,
+        dfg_time,
+        parameters={
+            "max_no_of_edges_in_diagram": max_num_edges,
+            "start_activities": start_activities,
+            "end_activities": end_activities,
+        },
+    )
+    dfg_filename = "dfg_timeline.png"
+    dfg_visualizer.save(gviz, dfg_filename)
 
     pm4py.save_vis_dfg(
         frequency_dfg,
@@ -92,3 +92,4 @@ def show(filtered_log):
     st.image("frequency_dfg.svg", use_container_width=False)
     st.image("performance_dfg_sum.svg", use_container_width=False)
     st.image("performance_dfg_median.svg", use_container_width=False)
+    st.image(dfg_filename, use_container_width=False)
