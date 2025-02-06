@@ -26,6 +26,14 @@ def apply(
     # Sidebar Filter Options
     st.sidebar.header("Filters")
 
+    sample_pct = st.sidebar.number_input(
+        "Sample %",
+        min_value=1,
+        max_value=100,
+        value=100,
+        step=1,
+    )
+
     start_date = log["time:timestamp"].min().replace(tzinfo=None).to_pydatetime()
     end_date = log["time:timestamp"].max().replace(tzinfo=None).to_pydatetime()
     time_range = st.sidebar.slider(
@@ -68,14 +76,6 @@ def apply(
         min_value=1,
         max_value=len(variants_count),
         value=len(variants_count),
-        step=1,
-    )
-
-    sample_pct = st.sidebar.number_input(
-        "Sample %",
-        min_value=1,
-        max_value=100,
-        value=100,
         step=1,
     )
 
