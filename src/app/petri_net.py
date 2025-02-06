@@ -18,13 +18,13 @@ def show(filtered_log):
     pm4py.save_vis_petri_net(net, im, fm, file_path=petri_filename, format="svg")
     st.image(petri_filename, use_container_width=True)
 
-    if st.button("🔍 Open Petri Net with Frequencies in New Window"):
-        gviz_frequency = petri_net_visualizer.apply(
-            net,
-            im,
-            fm,
-            variant=petri_net_visualizer.Variants.FREQUENCY,
-            log=filtered_log,
-        )
-
-        petri_net_visualizer.view(gviz_frequency)
+    gviz_frequency = petri_net_visualizer.apply(
+        net,
+        im,
+        fm,
+        variant=petri_net_visualizer.Variants.FREQUENCY,
+        log=filtered_log,
+    )
+    petri_frequency_filename = "petri_frequency.png"
+    petri_net_visualizer.save(gviz_frequency, output_file_path=petri_frequency_filename)
+    st.image(petri_frequency_filename, use_container_width=True)
