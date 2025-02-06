@@ -37,23 +37,21 @@ def set_event_resource_from_timeline(event, timeline_event):
     )
 
 
-def set_author_association(event, timeline_event):
-    author_map = {
-        "COLLABORATOR": "collaborator",
-        "CONTRIBUTOR": "contributor",
-        "FIRST_TIMER": "first_timer",
-        "FIRST_TIME_CONTRIBUTOR": "first_time_contributor",
-        "MANNEQUIN": "mannequin",
-        "MEMBER": "member",
-        "NONE": "community",
-        "OWNER": "owner",
-    }
+author_map = {
+    "COLLABORATOR": "collaborator",
+    "CONTRIBUTOR": "contributor",
+    "FIRST_TIMER": "first_timer",
+    "FIRST_TIME_CONTRIBUTOR": "first_time_contributor",
+    "MANNEQUIN": "mannequin",
+    "MEMBER": "member",
+    "NONE": "community",
+    "OWNER": "owner",
+}
 
+
+def set_author_association(event, timeline_event):
     if timeline_event.get("author_association"):
         event["author_association"] = author_map[timeline_event["author_association"]]
-
-    if timeline_event.get("actor") and "[bot]" in timeline_event["actor"]["login"]:
-        event["author_association"] = "bot"
 
 
 def set_event_label(event, timeline_event):
@@ -96,6 +94,13 @@ def handle_cross_referenced(event, timeline_event):
             event["concept:name"] = "cross-referenced from issue"
 
 
+def set_is_bot_author(event, timeline_event):
+    is_bot_author = (
+        timeline_event.get("actor") and "[bot]" in timeline_event["actor"]["login"]
+    )
+    event["is_bot_author"] = is_bot_author
+
+
 def create_xes_log(issues, timelines):
     """
     Create an XES log from issues and timelines using PM4Py.
@@ -113,6 +118,7 @@ def create_xes_log(issues, timelines):
         trace = Trace()
         trace.attributes["concept:name"] = f"Issue {issue['number']}"
         trace.attributes["state_reason"] = issue["state_reason"]
+        trace.attributes["author_association"] = author_map[issue["author_association"]]
         set_created_at(trace, issue)
         set_closed_at(trace, issue)
 
@@ -132,6 +138,7 @@ def create_xes_log(issues, timelines):
                 # Set default fields for all timeline events
                 event_name = timeline_event["event"]
                 event["concept:name"] = event_name
+                set_is_bot_author(event, timeline_event)
                 set_event_timestamp(event, timeline_event)
                 set_event_resource_from_timeline(event, timeline_event)
 
