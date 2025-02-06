@@ -75,11 +75,11 @@ if page == "Stats":
 elif page == "Variants":
     variants.show(filtered_log)
 elif page == "Discovery":
-    discovery.show(filtered_log)
+    discovery.show(log, filtered_log)
 elif page == "Table":
     table.show(filtered_log)
 elif page == "Bottleneck":
-    bottleneck_analysis.show(filtered_log)
+    bottleneck_analysis.show(log, filtered_log)
 elif page == "Conformance":
     conformance.show(log, filtered_log)
 elif page == "Organization":

@@ -7,6 +7,8 @@ import math
 
 
 def show(full_log, filtered_log):
+    full_log = full_log.copy()
+    filtered_log = filtered_log.copy()
     sample_pct = st.number_input(
         "% of full log to sample during token replay",
         min_value=1,
@@ -19,9 +21,9 @@ def show(full_log, filtered_log):
             full_log["case:concept:name"].nunique() * (sample_pct / 100)
         )
         full_log = pm4py.convert_to_event_log(
-            pm4py.sample_cases(full_log.copy(), num_cases=num_cases)
+            pm4py.sample_cases(full_log, num_cases=num_cases)
         )
-        filtered_log = pm4py.convert_to_event_log(filtered_log.copy())
+        filtered_log = pm4py.convert_to_event_log(filtered_log)
 
         print("Creating Petri net from filtered log")
         net, initial_marking, final_marking = pm4py.discover_petri_net_inductive(
