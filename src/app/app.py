@@ -7,6 +7,7 @@ from src.app import (
     conformance,
     discovery,
     filters,
+    organization,
     stats,
     table,
     variants,
@@ -31,7 +32,16 @@ except Exception:
 st.sidebar.title("Navigation")
 repo = st.sidebar.selectbox("Repo:", {"node-red-contrib-node-reddit", "react"})
 page = st.sidebar.radio(
-    "Go to:", ["Stats", "Variants", "Discovery", "Bottleneck", "Conformance", "Table"]
+    "Go to:",
+    [
+        "Stats",
+        "Variants",
+        "Discovery",
+        "Bottleneck",
+        "Conformance",
+        "Organization",
+        "Table",
+    ],
 )
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -72,3 +82,5 @@ elif page == "Bottleneck":
     bottleneck_analysis.show(filtered_log)
 elif page == "Conformance":
     conformance.show(log, filtered_log)
+elif page == "Organization":
+    organization.show(filtered_log)
