@@ -1,9 +1,11 @@
 import streamlit as st
 import pm4py
 from pm4py.visualization.petri_net import visualizer as petri_net_visualizer
+from src.app import evaluate, sample_util
 
 
-def show(filtered_log):
+def show(full_log, filtered_log):
+    full_log = full_log.copy()
     st.title("Petri net")
 
     # Generate a Petri Net
@@ -28,3 +30,7 @@ def show(filtered_log):
     petri_frequency_filename = "petri_frequency.png"
     petri_net_visualizer.save(gviz_frequency, output_file_path=petri_frequency_filename)
     st.image(petri_frequency_filename, use_container_width=True)
+
+    sample_log = sample_util.get(full_log)
+    if st.button("🐢 Evaluate model"):
+        evaluate.show(sample_log, net, im, fm)

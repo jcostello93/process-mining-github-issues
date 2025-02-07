@@ -3,7 +3,8 @@ import pm4py
 from src.app import case_duration_over_time, dotted_line_chart, dfg
 
 
-def show(filtered_log):
+def show(full_log, filtered_log):
+    full_log = full_log.copy()
     performance_spectrum_file_path = "performance_spectrum.png"
 
     # Event options
@@ -23,4 +24,4 @@ def show(filtered_log):
     dotted_line_chart.show(filtered_log)
 
     case_duration_over_time.show(filtered_log)
-    dfg.show(filtered_log)
+    dfg.show(full_log, filtered_log)

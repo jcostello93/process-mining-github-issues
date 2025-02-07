@@ -5,9 +5,11 @@ from pm4py.algo.filtering.dfg.dfg_filtering import filter_dfg_on_paths_percentag
 from pm4py.visualization.dfg import visualizer as dfg_visualizer
 from pm4py.algo.discovery.dfg.variants import clean_time as clean_dfg_time
 from pm4py.visualization.dfg.variants import timeline as timeline_gviz_generator
+from src.app import evaluate, sample_util
 
 
-def show(filtered_log):
+def show(full_log, filtered_log):
+    full_log = full_log.copy()
     st.title("DFG")
 
     # Discover the frequency DFG using activites and paths to filter
@@ -77,6 +79,17 @@ def show(filtered_log):
     )
 
     st.image("frequency_dfg.svg", use_container_width=False)
+
+    sample_log = sample_util.get(full_log)
+    if st.button("🐢 Evaluate model (via petri net)"):
+        pnet, pim, pfm = pm4py.convert_to_petri_net(
+            frequency_dfg, start_activities, end_activities
+        )
+        # petri_filename = "petri_dfg_net.svg"
+        # pm4py.save_vis_petri_net(pnet, pim, pfm, file_path=petri_filename, format="svg")
+        # st.image(petri_filename, use_container_width=True)
+        evaluate.show(sample_log, pnet, pim, pfm)
+
     st.image("performance_dfg_sum.svg", use_container_width=False)
     st.image("performance_dfg_median.svg", use_container_width=False)
 
