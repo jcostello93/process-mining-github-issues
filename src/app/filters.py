@@ -89,6 +89,12 @@ def apply(
     # Checkbox for merged PR filter
     merged_pr = st.sidebar.checkbox("Only keep cases linked to merged PRs", value=False)
 
+    bugs = st.sidebar.checkbox('Only keep titles containing "bug"', value=False)
+
+    feature_requests = st.sidebar.checkbox(
+        'Only keep titles containing "feature request"', value=False
+    )
+
     labels = labels_set
     with st.sidebar.expander("Filter Labels", expanded=False):
         selected_labels = st.multiselect("Select Labels to Keep", labels, default={})
@@ -113,12 +119,6 @@ def apply(
                 retain=False,
                 level="event",
             )
-        except Exception:
-            print("Could not filter activities")
-
-    if len(selected_endpoints) > 0:
-        try:
-            log = pm4py.filter_end_activities(log, selected_endpoints)
         except Exception:
             print("Could not filter activities")
 
@@ -159,6 +159,22 @@ def apply(
         except Exception:
             print("Could not filter has_merged_pr")
 
+    if bugs:
+        try:
+            log = pm4py.filter_trace_attribute_values(
+                log, "case:title_contains_bug", {True}, retain=True
+            )
+        except Exception:
+            print("Could not filter bugs")
+
+    if feature_requests:
+        try:
+            log = pm4py.filter_trace_attribute_values(
+                log, "case:title_contains_feature_request", {True}, retain=True
+            )
+        except Exception:
+            print("Could not filter feature_requests")
+
     if len(selected_labels) > 0:
         try:
             log = pm4py.filter_event_attribute_values(
@@ -166,4 +182,11 @@ def apply(
             )
         except Exception:
             print("Could not filter label")
+
+    if len(selected_endpoints) > 0:
+        try:
+            log = pm4py.filter_end_activities(log, selected_endpoints)
+        except Exception:
+            print("Could not filter activities")
+
     return log
