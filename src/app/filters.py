@@ -68,7 +68,7 @@ def apply(full_log, S3_BUCKET):
     st.sidebar.header("Filters")
 
     selected_filter = st.sidebar.selectbox(
-        "Load Saved Filter Set", ["Select..."] + list(saved_filters.keys())
+        "Load Saved Filter Set", ["Select..."] + sorted(list(saved_filters.keys()))
     )
 
     activities_set = get_attributes_set(full_log, "concept:name")
@@ -134,14 +134,14 @@ def apply(full_log, S3_BUCKET):
     with st.sidebar.expander("Filter Events", expanded=False):
         selected_events = st.multiselect(
             "Select Events to Keep",
-            activities_set,
-            default=current_filters["selected_events"],
+            sorted(list(activities_set)),
+            default=sorted(current_filters["selected_events"]),
         )
 
     selected_endpoints = st.sidebar.multiselect(
         "Filter Endpoints",
-        activities_set,
-        default=current_filters["selected_endpoints"],
+        sorted(list(activities_set)),
+        default=sorted(current_filters["selected_endpoints"]),
     )
 
     variants_count = pm4py.statistics.variants.pandas.get.get_variants_count(
@@ -157,8 +157,8 @@ def apply(full_log, S3_BUCKET):
 
     selected_authors = st.sidebar.multiselect(
         "Filter Author Association",
-        author_associations_set,
-        default=current_filters["selected_authors"],
+        sorted(list(author_associations_set)),
+        default=sorted(current_filters["selected_authors"]),
     )
 
     keep_bot_events = st.sidebar.checkbox(
@@ -181,8 +181,8 @@ def apply(full_log, S3_BUCKET):
     with st.sidebar.expander("Filter Labels", expanded=False):
         selected_labels = st.multiselect(
             "Select Labels to Keep",
-            labels_set,
-            default=current_filters["selected_labels"],
+            sorted(list(labels_set)),
+            default=sorted(current_filters["selected_labels"]),
         )
 
     # Save filter set
@@ -210,7 +210,8 @@ def apply(full_log, S3_BUCKET):
     # Delete a saved filter set
     if saved_filters:
         delete_filter = st.sidebar.selectbox(
-            "Delete Saved Filter Set", ["Select..."] + list(saved_filters.keys())
+            "Delete Saved Filter Set",
+            ["Select..."] + sorted(list(saved_filters.keys())),
         )
         if delete_filter != "Select..." and st.sidebar.button("Delete Filter Set"):
             delete_filter_set(delete_filter, S3_BUCKET)
