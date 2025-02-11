@@ -9,6 +9,18 @@ import math
 def show(full_log, filtered_log):
     full_log = full_log.copy()
     filtered_log = filtered_log.copy()
+
+    print("Creating Petri net from filtered log")
+    net, initial_marking, final_marking = pm4py.discover_petri_net_inductive(
+        filtered_log
+    )
+
+    petri_filename = "petri_net_conformance.svg"
+    pm4py.save_vis_petri_net(
+        net, initial_marking, final_marking, file_path=petri_filename, format="svg"
+    )
+    st.image(petri_filename, use_container_width=True)
+
     sample_pct = st.number_input(
         "% of full log to sample during token replay",
         min_value=1,
@@ -24,17 +36,6 @@ def show(full_log, filtered_log):
             pm4py.sample_cases(full_log, num_cases=num_cases)
         )
         filtered_log = pm4py.convert_to_event_log(filtered_log)
-
-        print("Creating Petri net from filtered log")
-        net, initial_marking, final_marking = pm4py.discover_petri_net_inductive(
-            filtered_log
-        )
-
-        petri_filename = "petri_net_conformance.svg"
-        pm4py.save_vis_petri_net(
-            net, initial_marking, final_marking, file_path=petri_filename, format="svg"
-        )
-        st.image(petri_filename, use_container_width=True)
 
         parameters_tbr = {
             token_based_replay_algorithm.Variants.TOKEN_REPLAY.value.Parameters.DISABLE_VARIANTS: True,
