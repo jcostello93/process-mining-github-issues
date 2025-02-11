@@ -28,9 +28,9 @@ def datetime_parser(dct):
 
 
 def load_filters(S3_BUCKET):
-    local_file = fetch_file(FILTERS_FILE, S3_BUCKET, FILTERS_FILE)
-    if os.path.exists(local_file):
-        with open(local_file, "r") as f:
+    fetch_file(FILTERS_FILE, S3_BUCKET, FILTERS_FILE)
+    if os.path.exists(FILTERS_FILE):
+        with open(FILTERS_FILE, "r") as f:
             return json.load(f, object_hook=datetime_parser)
     return {}
 
