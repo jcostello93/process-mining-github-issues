@@ -15,7 +15,7 @@ from src.app import (
 
 st.set_page_config(layout="wide")
 
-S3_BUCKET = None
+repos = {"react"}
 try:
     print("Setting env vars")
     S3_BUCKET = st.secrets["S3_BUCKET"]
@@ -25,12 +25,13 @@ try:
     print("Done!")
 except Exception:
     print("Running locally")
-    S3_BUCKET = None
+    S3_BUCKET = os.environ.get("S3_BUCKET")
+    repos.add("node-red-contrib-node-reddit")
 
 
 # Sidebar Navigation
 st.sidebar.title("Navigation")
-repo = st.sidebar.selectbox("Repo:", {"node-red-contrib-node-reddit", "react"})
+repo = st.sidebar.selectbox("Repo:", repos)
 page = st.sidebar.radio(
     "Go to:",
     [
@@ -68,7 +69,7 @@ def load_log(repo):
 
 
 log, msg = load_log(repo)
-filtered_log = filters.apply(log)
+filtered_log = filters.apply(log, S3_BUCKET)
 
 if page == "Stats":
     stats.show(filtered_log)
