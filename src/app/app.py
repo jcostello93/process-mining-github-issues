@@ -15,7 +15,6 @@ from src.app import (
 
 st.set_page_config(layout="wide")
 
-S3_BUCKET = None
 try:
     print("Setting env vars")
     S3_BUCKET = st.secrets["S3_BUCKET"]
@@ -25,7 +24,7 @@ try:
     print("Done!")
 except Exception:
     print("Running locally")
-    S3_BUCKET = None
+    S3_BUCKET = os.environ.get("S3_BUCKET")
 
 
 # Sidebar Navigation
@@ -68,7 +67,7 @@ def load_log(repo):
 
 
 log, msg = load_log(repo)
-filtered_log = filters.apply(log)
+filtered_log = filters.apply(log, S3_BUCKET)
 
 if page == "Stats":
     stats.show(filtered_log)

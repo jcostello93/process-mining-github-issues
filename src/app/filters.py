@@ -4,6 +4,7 @@ import json
 import os
 import math
 import datetime
+from src.data_pipeline.s3 import fetch_file, upload_file
 
 FILTERS_FILE = "filters.json"
 
@@ -26,27 +27,27 @@ def datetime_parser(dct):
     return dct
 
 
-def load_filters():
-    print("loading")
-    """Load saved filters from a JSON file, handling datetime values."""
-    if os.path.exists(FILTERS_FILE):
-        with open(FILTERS_FILE, "r") as f:
+def load_filters(S3_BUCKET):
+    local_file = fetch_file(FILTERS_FILE, S3_BUCKET, FILTERS_FILE)
+    if os.path.exists(local_file):
+        with open(local_file, "r") as f:
             return json.load(f, object_hook=datetime_parser)
     return {}
 
 
-def save_filters(filters):
+def save_filters(filters, S3_BUCKET):
     """Save filters to a JSON file, converting datetime values to strings."""
     with open(FILTERS_FILE, "w") as f:
         json.dump(filters, f, indent=4, default=datetime_converter)
+    upload_file(FILTERS_FILE, S3_BUCKET, FILTERS_FILE)
 
 
-def delete_filter_set(name):
+def delete_filter_set(name, S3_BUCKET):
     """Delete a saved filter set."""
-    filters = load_filters()
+    filters = load_filters(S3_BUCKET)
     if name in filters:
         del filters[name]
-        save_filters(filters)
+        save_filters(filters, S3_BUCKET)
 
 
 def get_attributes_set(log, field):
@@ -58,11 +59,11 @@ def get_attributes_set(log, field):
     return attributes_set
 
 
-def apply(full_log):
+def apply(full_log, S3_BUCKET):
     full_log = full_log.copy()
     filtered_log = full_log
 
-    saved_filters = load_filters()
+    saved_filters = load_filters(S3_BUCKET)
 
     st.sidebar.header("Filters")
 
@@ -202,7 +203,7 @@ def apply(full_log):
                 "feature_requests": feature_requests,
                 "selected_labels": selected_labels,
             }
-            save_filters(saved_filters)
+            save_filters(saved_filters, S3_BUCKET)
             st.sidebar.success(f"Filter set '{filter_name}' saved!")
             st.rerun()
 
@@ -212,7 +213,7 @@ def apply(full_log):
             "Delete Saved Filter Set", ["Select..."] + list(saved_filters.keys())
         )
         if delete_filter != "Select..." and st.sidebar.button("Delete Filter Set"):
-            delete_filter_set(delete_filter)
+            delete_filter_set(delete_filter, S3_BUCKET)
             st.sidebar.success(f"Deleted filter set: {delete_filter}")
             st.rerun()
 
