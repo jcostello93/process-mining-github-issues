@@ -101,6 +101,26 @@ def set_is_bot_author(event, timeline_event):
     event["is_bot_author"] = is_bot_author
 
 
+def title_contains_bug(trace, issue):
+    title = issue["title"].lower()
+    trace.attributes["title_contains_bug"] = False
+    if "bug:" in title:
+        trace.attributes["title_contains_bug"] = True
+    elif "[devtools bug]" in title:
+        trace.attributes["title_contains_bug"] = True
+    elif "[compiler bug]" in title:
+        trace.attributes["title_contains_bug"] = True
+
+
+def title_contains_feature_request(trace, issue):
+    title = issue["title"].lower()
+    trace.attributes["title_contains_feature_request"] = False
+    if "feature request:" in title:
+        trace.attributes["title_contains_feature_request"] = True
+    elif "[feature request]" in title:
+        trace.attributes["title_contains_feature_request"] = True
+
+
 def create_xes_log(issues, timelines):
     """
     Create an XES log from issues and timelines using PM4Py.
@@ -119,6 +139,9 @@ def create_xes_log(issues, timelines):
         trace.attributes["concept:name"] = f"Issue {issue['number']}"
         trace.attributes["state_reason"] = issue["state_reason"]
         trace.attributes["author_association"] = author_map[issue["author_association"]]
+        trace.attributes["title"] = issue["title"]
+        title_contains_bug(trace, issue)
+        title_contains_feature_request(trace, issue)
         set_created_at(trace, issue)
         set_closed_at(trace, issue)
 
