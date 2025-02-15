@@ -2,6 +2,7 @@ import streamlit as st
 import pm4py
 import matplotlib.pyplot as plt
 import pandas as pd
+import statistics
 
 
 def show(filtered_log):
@@ -10,6 +11,12 @@ def show(filtered_log):
 
     # Process Variants
     variants = pm4py.statistics.variants.pandas.get.get_variants_count(filtered_log)
+    full_variants, variants_times = (
+        pm4py.statistics.variants.log.get.get_variants_along_with_case_durations(
+            pm4py.convert_to_event_log(filtered_log)
+        )
+    )
+
     num_cases = filtered_log["case:concept:name"].nunique()
     sorted_variants = sorted(variants.items(), key=lambda item: item[1], reverse=True)
 
@@ -39,6 +46,9 @@ def show(filtered_log):
         "Variant Index": variant_indices,
         "Full Variant Path": [" → ".join(k) for k, v in top_variants],
         "Count": counts,
+        "Median duration (hours)": [
+            statistics.median(variants_times[k]) // 60 // 60 for k, v in top_variants
+        ],
         "% of log": [round((v / num_cases) * 100, 2) for k, v in top_variants],
     }
     df_variants = pd.DataFrame(variant_data)

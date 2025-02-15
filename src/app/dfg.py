@@ -16,10 +16,10 @@ def show(full_log, filtered_log):
     activities = pm4py.get_event_attribute_values(filtered_log, "concept:name")
     frequency_dfg, start_activities, end_activities = pm4py.discover_dfg(filtered_log)
     activities_perc = st.slider(
-        "Activities Percentage", min_value=0.0, max_value=1.0, value=0.95, step=0.05
+        "Activities Percentage", min_value=0.0, max_value=1.0, value=0.90, step=0.05
     )
     paths_perc = st.slider(
-        "Paths Percentage", min_value=0.0, max_value=1.0, value=0.95, step=0.05
+        "Paths Percentage", min_value=0.0, max_value=1.0, value=0.10, step=0.05
     )
     max_num_edges = st.slider(
         "Max Number of Edges", min_value=1, max_value=500, value=100, step=1
@@ -43,6 +43,9 @@ def show(full_log, filtered_log):
     # Use the frequency DFG to filter the performance DFG
     removal_list = []
     for edge in performance_dfg:
+        if performance_dfg[edge]["median"] == 0.0:
+            removal_list.append(edge)
+
         if edge not in frequency_dfg:
             removal_list.append(edge)
 

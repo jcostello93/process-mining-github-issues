@@ -74,6 +74,7 @@ def apply(full_log, S3_BUCKET):
     activities_set = get_attributes_set(full_log, "concept:name")
     author_associations_set = get_attributes_set(full_log, "author_association")
     labels_set = get_attributes_set(full_log, "label")
+    state_set = get_attributes_set(full_log, "case:state")
 
     default_filters = {
         "sample_pct": 100,
@@ -96,9 +97,8 @@ def apply(full_log, S3_BUCKET):
                 "unsubscribed",
             }
         ),
-        "selected_endpoints": list(
-            {"closed", "completed", "not_planned"}.intersection(activities_set)
-        ),
+        "keep_events_after_close": False,
+        "selected_state": list({"open", "closed"}.intersection(state_set)),
         "top_k": len(pm4py.statistics.variants.pandas.get.get_variants_count(full_log)),
         "selected_authors": list(author_associations_set),
         "keep_bot_events": True,
@@ -138,10 +138,10 @@ def apply(full_log, S3_BUCKET):
             default=sorted(current_filters["selected_events"]),
         )
 
-    selected_endpoints = st.sidebar.multiselect(
-        "Filter Endpoints",
-        sorted(list(activities_set)),
-        default=sorted(current_filters["selected_endpoints"]),
+    selected_state = st.sidebar.multiselect(
+        "Filter State",
+        sorted(list(state_set)),
+        default=sorted(current_filters["selected_state"]),
     )
 
     variants_count = pm4py.statistics.variants.pandas.get.get_variants_count(
@@ -163,6 +163,11 @@ def apply(full_log, S3_BUCKET):
 
     keep_bot_events = st.sidebar.checkbox(
         "Keep bot events", value=current_filters["keep_bot_events"]
+    )
+
+    keep_events_after_close = st.sidebar.checkbox(
+        "Keep events following issue close",
+        value=current_filters["keep_events_after_close"],
     )
 
     merged_pr = st.sidebar.checkbox(
@@ -194,7 +199,6 @@ def apply(full_log, S3_BUCKET):
                 "start_date": time_range[0],
                 "end_date": time_range[1],
                 "selected_events": selected_events,
-                "selected_endpoints": selected_endpoints,
                 "top_k": top_k,
                 "selected_authors": selected_authors,
                 "keep_bot_events": keep_bot_events,
@@ -252,6 +256,17 @@ def apply(full_log, S3_BUCKET):
     except Exception:
         print("Could not filter top variants")
 
+    if selected_state:
+        try:
+            filtered_log = pm4py.filter_trace_attribute_values(
+                filtered_log,
+                "case:state",
+                selected_state,
+                retain=True,
+            )
+        except Exception:
+            print("Could not filter state")
+
     if selected_authors:
         try:
             filtered_log = pm4py.filter_event_attribute_values(
@@ -308,10 +323,16 @@ def apply(full_log, S3_BUCKET):
         except Exception:
             print("Could not filter label")
 
-    if len(selected_endpoints) > 0:
+    if not keep_events_after_close:
         try:
-            filtered_log = pm4py.filter_end_activities(filtered_log, selected_endpoints)
+            filtered_log = pm4py.filter_event_attribute_values(
+                filtered_log,
+                "occurs_after_issue_close",
+                {True},
+                retain=False,
+                level="event",
+            )
         except Exception:
-            print("Could not filter activities")
+            print("Could not discard events after close")
 
     return filtered_log
