@@ -137,6 +137,7 @@ def create_xes_log(issues, timelines):
     for issue in issues:
         trace = Trace()
         trace.attributes["concept:name"] = f"Issue {issue['number']}"
+        trace.attributes["state"] = issue["state"]
         trace.attributes["state_reason"] = issue["state_reason"]
         trace.attributes["author_association"] = author_map[issue["author_association"]]
         trace.attributes["title"] = issue["title"]
