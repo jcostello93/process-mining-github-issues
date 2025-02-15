@@ -3,6 +3,7 @@ import pm4py
 from pm4py.statistics.traces.generic.log.case_statistics import get_median_case_duration
 from pm4py.statistics.traces.generic.log.case_arrival import get_case_dispersion_avg
 from src.app import (
+    case_duration_distribution,
     dotted_line_chart,
     num_active_cases_over_time,
     num_issues_created_over_time,
@@ -83,7 +84,7 @@ def first_grid(filtered_log):
 
     # Placeholder for additional charts
     with col2:
-        num_open_issues_over_time.show(filtered_log)
+        case_duration_distribution.show(filtered_log)
 
     with col3:
         num_events_over_time.show(filtered_log)
