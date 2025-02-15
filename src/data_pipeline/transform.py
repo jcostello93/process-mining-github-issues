@@ -2,7 +2,7 @@ import json
 import os
 import time
 import argparse
-from datetime import datetime
+from datetime import datetime, timedelta
 from src.data_pipeline.s3 import fetch_file, upload_file
 from pm4py.objects.log.obj import EventLog, Trace, Event
 import pm4py
@@ -11,6 +11,9 @@ S3_BUCKET = os.environ.get("S3_BUCKET")
 
 
 def parse_timestamp(timestamp_str):
+    if not timestamp_str:
+        return None
+
     try:
         # Convert "Z" to "+00:00" for ISO 8601 compatibility
         if timestamp_str.endswith("Z"):
@@ -58,6 +61,27 @@ def set_event_label(event, timeline_event):
     event_name = timeline_event["event"]
     if event_name == "labeled":
         event["label"] = timeline_event["label"]["name"]
+
+
+def prepare_trace_for_append(trace):
+    # The timestamps are in seconds and the resolution event may occur within a batch
+    # of events. This function makes sure the resolution event is at the end of that batch
+    # by adding jitter, sorting, and removing the jitter. This ultimately results in cleaner
+    # process models, where it's clear what the resolution is.
+    close_events = {"closed", "not_planned"}
+    jitter = timedelta(seconds=1)
+
+    for event in trace:
+        if event["concept:name"] in close_events:
+            event["time:timestamp"] = event["time:timestamp"] + jitter
+
+    sorted_trace = pm4py.objects.log.util.sorting.sort_timestamp_trace(trace)
+
+    for event in trace:
+        if event["concept:name"] in close_events:
+            event["time:timestamp"] = event["time:timestamp"] - jitter
+
+    return sorted_trace
 
 
 def handle_closed_event(event, timeline_event):
@@ -121,6 +145,15 @@ def title_contains_feature_request(trace, issue):
         trace.attributes["title_contains_feature_request"] = True
 
 
+def set_event_occurs_after_close(event, issue, timeline_event):
+    issue_closed_at = parse_timestamp(issue.get("closed_at"))
+    event_timestamp = parse_timestamp(timeline_event["created_at"])
+    event["occurs_after_issue_close"] = False
+
+    if issue_closed_at and event_timestamp and event_timestamp > issue_closed_at:
+        event["occurs_after_issue_close"] = True
+
+
 def create_xes_log(issues, timelines):
     """
     Create an XES log from issues and timelines using PM4Py.
@@ -137,6 +170,7 @@ def create_xes_log(issues, timelines):
     for issue in issues:
         trace = Trace()
         trace.attributes["concept:name"] = f"Issue {issue['number']}"
+        trace.attributes["state"] = issue["state"]
         trace.attributes["state_reason"] = issue["state_reason"]
         trace.attributes["author_association"] = author_map[issue["author_association"]]
         trace.attributes["title"] = issue["title"]
@@ -164,6 +198,7 @@ def create_xes_log(issues, timelines):
                 set_is_bot_author(event, timeline_event)
                 set_event_timestamp(event, timeline_event)
                 set_event_resource_from_timeline(event, timeline_event)
+                set_event_occurs_after_close(event, issue, timeline_event)
 
                 # Handle special cases and overrides
                 match event_name:
@@ -180,8 +215,7 @@ def create_xes_log(issues, timelines):
 
                 trace.append(event)
 
-        # Append trace with its events sorted
-        sorted_trace = pm4py.objects.log.util.sorting.sort_timestamp_trace(trace)
+        sorted_trace = prepare_trace_for_append(trace)
         log.append(sorted_trace)
 
     print("XES log creation complete.")
