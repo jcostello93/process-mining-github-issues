@@ -121,6 +121,15 @@ def title_contains_feature_request(trace, issue):
         trace.attributes["title_contains_feature_request"] = True
 
 
+def set_event_occurs_after_close(event, issue, timeline_event):
+    issue_closed_at = parse_timestamp(issue.get("closed_at"))
+    event_timestamp = parse_timestamp(timeline_event["created_at"])
+    event["occurs_after_issue_close"] = False
+
+    if issue_closed_at and event_timestamp and event_timestamp > issue_closed_at:
+        event["occurs_after_issue_close"] = True
+
+
 def create_xes_log(issues, timelines):
     """
     Create an XES log from issues and timelines using PM4Py.
@@ -165,6 +174,7 @@ def create_xes_log(issues, timelines):
                 set_is_bot_author(event, timeline_event)
                 set_event_timestamp(event, timeline_event)
                 set_event_resource_from_timeline(event, timeline_event)
+                set_event_occurs_after_close(event, issue, timeline_event)
 
                 # Handle special cases and overrides
                 match event_name:
