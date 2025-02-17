@@ -51,9 +51,6 @@ def show(full_log, filtered_log):
     # Use the frequency DFG to filter the performance DFG
     removal_list = []
     for edge in performance_dfg:
-        if performance_dfg[edge]["median"] == 0.0:
-            removal_list.append(edge)
-
         if edge not in frequency_dfg:
             removal_list.append(edge)
 
