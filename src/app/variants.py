@@ -22,7 +22,10 @@ def show(filtered_log):
 
     # Allow user to select number of top variants to display
     num_variants = st.slider(
-        "Number of Top Variants to Show", min_value=1, max_value=len(variants), value=10
+        "Number of Top Variants to Show",
+        min_value=1,
+        max_value=len(variants),
+        value=100,
     )
 
     # Extract top variants
