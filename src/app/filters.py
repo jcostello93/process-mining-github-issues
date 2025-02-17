@@ -100,7 +100,7 @@ def apply(full_log, S3_BUCKET):
         "keep_events_after_close": False,
         "selected_state": list({"open", "closed"}.intersection(state_set)),
         "top_k": len(pm4py.statistics.variants.pandas.get.get_variants_count(full_log)),
-        "selected_authors": list(author_associations_set),
+        "selected_authors": [],
         "keep_bot_events": True,
         "merged_pr": False,
         "bugs": False,

@@ -22,7 +22,10 @@ def show(filtered_log):
 
     # Allow user to select number of top variants to display
     num_variants = st.slider(
-        "Number of Top Variants to Show", min_value=1, max_value=len(variants), value=10
+        "Number of Top Variants to Show",
+        min_value=1,
+        max_value=len(variants),
+        value=100,
     )
 
     # Extract top variants
@@ -34,9 +37,12 @@ def show(filtered_log):
 
     # Display Process Variants as Bar Chart
     fig, ax = plt.subplots(figsize=(12, 6))
-    ax.barh(variant_indices[::-1], counts[::-1])  # Reverse for better visualization
-    ax.set_xlabel("Count")
-    ax.set_ylabel("Variant Index")
+    ax.bar(variant_indices, counts)  # X-axis: Variants, Y-axis: Counts
+
+    # Remove x-axis label since variant names are too long
+    ax.set_xticks([])
+    ax.set_xlabel("Variant index")
+    ax.set_ylabel("Count")
     ax.set_title(f"Top {num_variants} Process Variants")
 
     st.pyplot(fig)
