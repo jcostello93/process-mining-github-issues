@@ -3,6 +3,7 @@ import pm4py
 from pm4py.algo.filtering.dfg.dfg_filtering import filter_dfg_on_activities_percentage
 from pm4py.algo.filtering.dfg.dfg_filtering import filter_dfg_on_paths_percentage
 from src.app import evaluate, sample_util
+import pandas as pd
 
 
 def show(full_log, filtered_log):
@@ -47,6 +48,8 @@ def show(full_log, filtered_log):
     performance_dfg, start_activities, end_activities = pm4py.discover_performance_dfg(
         filtered_log
     )
+
+    print(performance_dfg)
 
     # Use the frequency DFG to filter the performance DFG
     removal_list = []
@@ -96,3 +99,21 @@ def show(full_log, filtered_log):
 
     st.image("performance_dfg_sum.svg", use_container_width=False)
     st.image("performance_dfg_median.svg", use_container_width=False)
+
+    df_performance = pd.DataFrame.from_dict(performance_dfg, orient="index")
+    df_performance["median (hours)"] = df_performance["median"] / 60 / 60
+    df_performance["sum (years)"] = df_performance["sum"] / 60 / 60 / 24 / 365
+    df_frequency = pd.DataFrame.from_dict(
+        frequency_dfg, orient="index", columns=["count"]
+    )
+    df_frequency.index = pd.MultiIndex.from_tuples(df_frequency.index)
+    df = df_performance.merge(
+        df_frequency, left_index=True, right_index=True, how="left"
+    )
+    df.drop(columns=["mean", "max", "min", "stdev", "median", "sum"], inplace=True)
+    df.sort_values(by="count", ascending=False, inplace=True)
+
+    df.reset_index(inplace=True)
+    df.rename(columns={"level_0": "Source", "level_1": "Target"}, inplace=True)
+
+    st.dataframe(df)
