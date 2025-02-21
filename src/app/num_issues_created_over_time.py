@@ -8,17 +8,11 @@ def show(filtered_log):
         filtered_log["case:created_at"], utc=True
     )
 
-    # Extract unique cases with their creation times
+    # Aggregate number of issues created in 4 month periods
     cases = filtered_log[["case:concept:name", "case:created_at"]].drop_duplicates()
-
-    # Count the number of issues created per day
     issues_created = cases.groupby(cases["case:created_at"].dt.date).size()
-
-    # Convert index to datetime for resampling
     issues_created.index = pd.to_datetime(issues_created.index)
-
-    # Resample to fill missing dates (adjust to desired frequency)
-    aggregation_frequency = "4M"  # Change to 'M' for monthly, 'D' for daily
+    aggregation_frequency = "4M"
     issues_created = issues_created.resample(aggregation_frequency).sum()
 
     fig1, ax1 = plt.subplots(figsize=(10, 5))

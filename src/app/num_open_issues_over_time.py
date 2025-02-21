@@ -9,12 +9,12 @@ def show(filtered_log):
         ["case:concept:name", "case:created_at", "case:closed_at"]
     ].drop_duplicates()
 
+    # Calculate the number of open tickets over time using the created and closed timestamps
     timestamps = sorted(
         set(cases["case:created_at"]).union(set(cases["case:closed_at"].dropna()))
     )
     open_tickets = []
     current_open = 0
-
     for timestamp in timestamps:
         opened = (cases["case:created_at"] == timestamp).sum()
         closed = (cases["case:closed_at"] == timestamp).sum()

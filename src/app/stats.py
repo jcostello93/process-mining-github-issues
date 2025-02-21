@@ -13,14 +13,12 @@ from src.app import (
 
 
 def second_grid(filtered_log):
-    # Define file paths for images
     file_paths = {
         "Events Over Days of the Week": "events_over_days_of_week.png",
         "Events Over Hour of the Day": "events_over_hour_of_day.png",
         "Case Duration Distribution": "case_duration.png",
     }
 
-    # Generate PM4Py visualizations
     pm4py.save_vis_events_distribution_graph(
         filtered_log,
         distr_type="days_week",
@@ -35,11 +33,9 @@ def second_grid(filtered_log):
         filtered_log, file_path=file_paths["Case Duration Distribution"]
     )
 
-    # Create a 2x2 grid layout
     col1, col2 = st.columns(2)
     col3, col4 = st.columns(2)
 
-    # Display images in the grid
     with col1:
         num_events_over_time.show(filtered_log)
     with col2:
@@ -61,15 +57,12 @@ def second_grid(filtered_log):
 def first_grid(filtered_log):
     filtered_log = filtered_log.copy()
 
-    # Create a 2x2 grid layout
     col1, col2 = st.columns(2)
     col3, col4 = st.columns(2)
 
-    # First Chart: Issues Created Over Time
     with col1:
         dotted_line_chart.show(filtered_log)
 
-    # Placeholder for additional charts
     with col2:
         case_duration_distribution.show(filtered_log)
 
@@ -81,15 +74,12 @@ def first_grid(filtered_log):
 
 
 def show(filtered_log):
-    # Copy log to avoid modifying original
     cell_log = filtered_log.copy()
 
-    # Compute Metrics
     median_case_duration = get_median_case_duration(cell_log)
     case_arrival_average = pm4py.get_case_arrival_average(cell_log)
     case_dispersion_ratio = get_case_dispersion_avg(cell_log)
 
-    # Display Metrics
     st.write(f"📏 **Median Case Duration:** {median_case_duration // 60 // 60} hours")
     st.write(
         f"⏳ **Avg. Time Between Case Arrivals:** {case_arrival_average // 60 // 60} hours"

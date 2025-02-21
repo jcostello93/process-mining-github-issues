@@ -10,7 +10,6 @@ def show(sample_log, net, im, fm):
         sample_log, net, im, fm
     )
 
-    # Display results in a table
     st.title("Petri Net Evaluation Results")
 
     metrics = {

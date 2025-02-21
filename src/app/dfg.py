@@ -3,6 +3,7 @@ import pm4py
 from pm4py.algo.filtering.dfg.dfg_filtering import filter_dfg_on_activities_percentage
 from pm4py.algo.filtering.dfg.dfg_filtering import filter_dfg_on_paths_percentage
 from src.app import evaluate, sample_util
+import pandas as pd
 
 
 def show(full_log, filtered_log):
@@ -51,9 +52,6 @@ def show(full_log, filtered_log):
     # Use the frequency DFG to filter the performance DFG
     removal_list = []
     for edge in performance_dfg:
-        if performance_dfg[edge]["median"] == 0.0:
-            removal_list.append(edge)
-
         if edge not in frequency_dfg:
             removal_list.append(edge)
 
@@ -90,6 +88,14 @@ def show(full_log, filtered_log):
 
     st.image("frequency_dfg.svg", use_container_width=False)
 
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.image("performance_dfg_sum.svg", use_container_width=False)
+
+    with col2:
+        st.image("performance_dfg_median.svg", use_container_width=False)
+
     sample_log = sample_util.get(full_log)
     if st.button("🐢 Evaluate model (via petri net)"):
         pnet, pim, pfm = pm4py.convert_to_petri_net(
@@ -97,5 +103,20 @@ def show(full_log, filtered_log):
         )
         evaluate.show(sample_log, pnet, pim, pfm)
 
-    st.image("performance_dfg_sum.svg", use_container_width=False)
-    st.image("performance_dfg_median.svg", use_container_width=False)
+    df_performance = pd.DataFrame.from_dict(performance_dfg, orient="index")
+    df_performance["median (hours)"] = df_performance["median"] / 60 / 60
+    df_performance["sum (years)"] = df_performance["sum"] / 60 / 60 / 24 / 365
+    df_frequency = pd.DataFrame.from_dict(
+        frequency_dfg, orient="index", columns=["count"]
+    )
+    df_frequency.index = pd.MultiIndex.from_tuples(df_frequency.index)
+    df = df_performance.merge(
+        df_frequency, left_index=True, right_index=True, how="left"
+    )
+    df.drop(columns=["mean", "max", "min", "stdev", "median", "sum"], inplace=True)
+    df.sort_values(by="count", ascending=False, inplace=True)
+
+    df.reset_index(inplace=True)
+    df.rename(columns={"level_0": "Source", "level_1": "Target"}, inplace=True)
+
+    st.dataframe(df)

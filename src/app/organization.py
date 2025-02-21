@@ -29,11 +29,9 @@ def show(filtered_log):
     working_together_weight_threshold = 1 / working_together_factor
     subcontracting_weight_threshold = 1 / subcontracting_factor
 
-    # Load and Filter Log
     st.title("Social Network Analysis")
 
     if st.button("🐢 Run analysis"):
-        # Remove deleted members
         filtered_log = attributes_filter.apply(
             filtered_log,
             values={"Ghost"},
@@ -45,7 +43,6 @@ def show(filtered_log):
 
         st.success("✅ Log filtered successfully!")
 
-        # Apply SNA Algorithms
         st.write("📊 **Generating Social Network Visualizations**")
 
         sna_types = {
@@ -74,20 +71,17 @@ def show(filtered_log):
                 },
             )
 
-            # Save and Display Visualization
             filename = f"{label.lower().replace(' ', '_')}.html"
             sna_vis.save(gviz, variant=sna_vis.Variants.PYVIS, dest_file=filename)
 
             sna_outputs[label] = filename
 
-        # Show Visualizations in Streamlit
         for label, filename in sna_outputs.items():
             st.subheader(f"📌 {label}")
             with open(filename, "r", encoding="utf-8") as f:
                 html_code = f.read()
             st.components.v1.html(html_code, height=600, scrolling=True)
 
-            # Download Button
             with open(filename, "rb") as file:
                 st.download_button(
                     label=f"⬇️ Download {label} Visualization",
