@@ -12,6 +12,7 @@ def show(filtered_log):
     case_durations.columns = ["start_time", "end_time"]
     case_durations = case_durations.sort_values(by="start_time")
 
+    # Calculate the number of active cases over time by tracking start and end events with a daily resolution
     event_points = pd.DataFrame(
         {
             "timestamp": pd.concat(
@@ -20,7 +21,6 @@ def show(filtered_log):
             "change": [1] * len(case_durations) + [-1] * len(case_durations),
         }
     )
-
     event_points = event_points.sort_values(by="timestamp")
     event_points["active_cases"] = event_points["change"].cumsum()
     event_points = (

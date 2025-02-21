@@ -27,7 +27,6 @@ except Exception:
     repos.add("node-red-contrib-node-reddit")
 
 
-# Sidebar Navigation
 st.sidebar.title("Navigation")
 repo = st.sidebar.selectbox("Repo:", repos)
 page = st.sidebar.radio(
@@ -47,7 +46,6 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "../../"))
 
 
-# Function to Fetch & Load Log
 @st.cache_data
 def load_log(repo):
     if repo == "react":
@@ -56,11 +54,11 @@ def load_log(repo):
         owner = "jcostello93"
     file_name = f"{owner}_{repo}_event_log.xes"
     print(f"Running load_log for {owner}, {repo}")
-    file_path = os.path.join(ROOT_DIR, file_name)  # Store directly in the root folder
+    file_path = os.path.join(ROOT_DIR, file_name)
 
     try:
-        local_file = fetch_file(file_path, S3_BUCKET, file_name)  # Fetch from S3
-        log = pm4py.read_xes(local_file)  # Load event log
+        local_file = fetch_file(file_path, S3_BUCKET, file_name)
+        log = pm4py.read_xes(local_file)
         return log, f"✅ Successfully loaded log: {file_name}"
     except Exception as e:
         return None, f"❌ Error loading log: {e}"
