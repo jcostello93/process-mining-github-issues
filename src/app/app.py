@@ -4,10 +4,8 @@ import os
 from src.data_pipeline.s3 import fetch_file
 from src.app import (
     enhancement,
-    conformance,
     discovery,
     filters,
-    organization,
     stats,
     table,
     variants,
@@ -81,7 +79,3 @@ elif page == "Table":
     table.show(filtered_log)
 elif page == "Enhancement":
     enhancement.show(log, filtered_log)
-elif page == "Conformance":
-    conformance.show(log, filtered_log)
-elif page == "Organization":
-    organization.show(filtered_log)
