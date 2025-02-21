@@ -49,8 +49,6 @@ def show(full_log, filtered_log):
         filtered_log
     )
 
-    print(performance_dfg)
-
     # Use the frequency DFG to filter the performance DFG
     removal_list = []
     for edge in performance_dfg:
@@ -90,15 +88,20 @@ def show(full_log, filtered_log):
 
     st.image("frequency_dfg.svg", use_container_width=False)
 
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.image("performance_dfg_sum.svg", use_container_width=False)
+
+    with col2:
+        st.image("performance_dfg_median.svg", use_container_width=False)
+
     sample_log = sample_util.get(full_log)
     if st.button("🐢 Evaluate model (via petri net)"):
         pnet, pim, pfm = pm4py.convert_to_petri_net(
             frequency_dfg, start_activities, end_activities
         )
         evaluate.show(sample_log, pnet, pim, pfm)
-
-    st.image("performance_dfg_sum.svg", use_container_width=False)
-    st.image("performance_dfg_median.svg", use_container_width=False)
 
     df_performance = pd.DataFrame.from_dict(performance_dfg, orient="index")
     df_performance["median (hours)"] = df_performance["median"] / 60 / 60
