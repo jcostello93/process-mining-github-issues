@@ -39,7 +39,7 @@ def show(filtered_log):
         title="Event Type",
         bbox_to_anchor=(0.5, -0.15),
         loc="upper center",
-        ncol=5,
+        ncol=3,
         frameon=False,
     )
     ax.grid()

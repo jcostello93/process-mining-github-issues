@@ -36,8 +36,6 @@ page = st.sidebar.radio(
         "Variants",
         "Discovery",
         "Enhancement",
-        "Conformance",
-        "Organization",
         "Table",
     ],
 )
