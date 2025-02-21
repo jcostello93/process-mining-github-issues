@@ -35,8 +35,13 @@ def show(filtered_log):
 
     # Create histogram
     fig, ax = plt.subplots(figsize=(10, 6))
-    ax.hist(df["duration_days"], bins=50, edgecolor="black", alpha=0.7)
-    ax.set_xlim(0, 3 * 365)
+    ax.hist(
+        df["duration_days"],
+        bins=[i * 30 for i in range(13)],
+        edgecolor="black",
+        alpha=0.7,
+    )
+    ax.set_xlim(0, 365)
 
     ax.set_xlabel("Case Duration (Days)")
     ax.set_ylabel("Number of Cases")
