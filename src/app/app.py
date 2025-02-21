@@ -3,7 +3,7 @@ import pm4py
 import os
 from src.data_pipeline.s3 import fetch_file
 from src.app import (
-    bottleneck_analysis,
+    enhancement,
     conformance,
     discovery,
     filters,
@@ -38,7 +38,7 @@ page = st.sidebar.radio(
         "Stats",
         "Variants",
         "Discovery",
-        "Bottleneck",
+        "Enhancement",
         "Conformance",
         "Organization",
         "Table",
@@ -79,8 +79,8 @@ elif page == "Discovery":
     discovery.show(log, filtered_log)
 elif page == "Table":
     table.show(filtered_log)
-elif page == "Bottleneck":
-    bottleneck_analysis.show(log, filtered_log)
+elif page == "Enhancement":
+    enhancement.show(log, filtered_log)
 elif page == "Conformance":
     conformance.show(log, filtered_log)
 elif page == "Organization":
