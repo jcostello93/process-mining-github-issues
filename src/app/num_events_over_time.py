@@ -13,15 +13,6 @@ def show(filtered_log):
     )
     event_counts["date"] = pd.to_datetime(event_counts["date"])
 
-    top_n_events = 10
-    top_events = (
-        event_counts.groupby("concept:name")["event_count"]
-        .sum()
-        .nlargest(top_n_events)
-        .index
-    )
-    event_counts = event_counts[event_counts["concept:name"].isin(top_events)]
-
     fig, ax = plt.subplots(figsize=(10, 5))
     for event_type, data in event_counts.groupby("concept:name"):
         ax.plot(
@@ -34,7 +25,7 @@ def show(filtered_log):
 
     ax.set_xlabel("Time")
     ax.set_ylabel("Number of Events")
-    ax.set_title("Events Over Time (Top 10 Event Types)")
+    ax.set_title("Events Over Time")
     ax.legend(
         title="Event Type",
         bbox_to_anchor=(0.5, -0.15),

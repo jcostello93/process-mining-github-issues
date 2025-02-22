@@ -9,7 +9,6 @@ def show(filtered_log):
         ["case:concept:name", "case:created_at", "case:closed_at"]
     ].drop_duplicates()
 
-    # Calculate the number of open tickets over time using the created and closed timestamps
     timestamps = sorted(
         set(cases["case:created_at"]).union(set(cases["case:closed_at"].dropna()))
     )
@@ -24,8 +23,8 @@ def show(filtered_log):
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.plot(timestamps, open_tickets, marker="o", linestyle="-")
     ax.set_xlabel("Time")
-    ax.set_ylabel("Number of Open Tickets")
-    ax.set_title("Number of Open Tickets Over Time")
+    ax.set_ylabel("Number of Open Issues")
+    ax.set_title("Number of Open Issues Over Time")
     ax.grid()
     plt.xticks(rotation=45)
 
