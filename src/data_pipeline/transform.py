@@ -238,7 +238,7 @@ def main(owner, repo, should_publish):
         )
 
     print("Retrieving timelines")
-    timelines = fetch_file(timelines_file, bucket_name, issues_file)
+    timelines = fetch_file(timelines_file, bucket_name, timelines_file)
     with open(timelines_file, "r", encoding="utf-8") as file:
         timelines = json.load(file)
     if timelines is None:
