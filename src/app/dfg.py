@@ -119,4 +119,5 @@ def show(full_log, filtered_log):
     df.reset_index(inplace=True)
     df.rename(columns={"level_0": "Source", "level_1": "Target"}, inplace=True)
 
+    st.title("DFG transition aggregations")
     st.dataframe(df)
