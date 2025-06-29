@@ -18,8 +18,9 @@ def show(full_log, filtered_log):
     )
 
     petri_filename = "petri_net.svg"
+    rankdir = st.selectbox("Select Petri net layout direction:", ["LR", "TB"])
     pm4py.save_vis_petri_net(
-        net, im, fm, file_path=petri_filename, rankdir="TB", format="svg"
+        net, im, fm, file_path=petri_filename, rankdir=rankdir, format="svg"
     )
     st.image(petri_filename, use_container_width=True)
 
