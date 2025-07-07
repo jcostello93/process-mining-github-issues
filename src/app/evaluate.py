@@ -15,7 +15,6 @@ def show(sample_log, net, im, fm):
     metrics = {
         "Percentage of Fitting Traces": fitness["percentage_of_fitting_traces"],
         "Average Trace Fitness": fitness["average_trace_fitness"],
-        "Log Fitness": fitness["log_fitness"],
         "Simplicity": simplicity,
         "Precision": precision,
         "Generalization": generalization,
